@@ -30,7 +30,15 @@
     "freenas",
     "truenas-scale"
   ],
-  "author": "",
+  "author": "spranab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spranab/truenas-mcp.git"
+  },
+  "homepage": "https://github.com/spranab/truenas-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/spranab/truenas-mcp/issues"
+  },
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1"

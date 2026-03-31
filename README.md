@@ -168,7 +168,7 @@ Built for **TrueNAS SCALE** REST API v2.0. Compatible with TrueNAS SCALE 22.x th
 ## Development
 
 ```bash
-git clone https://github.com/your-username/truenas-mcp
+git clone https://github.com/spranab/truenas-mcp
 cd truenas-mcp
 npm install
 npm run build
