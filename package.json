@@ -1,6 +1,6 @@
 {
   "name": "truenas-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Comprehensive MCP server for TrueNAS SCALE — manage storage, shares, VMs, apps, network, and more via the Model Context Protocol",
   "type": "module",
   "main": "dist/index.js",

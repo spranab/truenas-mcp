@@ -330,8 +330,14 @@ export function register(server: McpServer, client: TrueNASClient): void {
       id: z.string().describe("App ID (name) of the installed app"),
     },
     async ({ id }) => {
-      const result = await client.get(`/app/id/${id}`);
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      // Queried through the filterable /app collection rather than /app/id/{id}:
+      // the middleware maps a single `id` equality filter to a fast single-app lookup.
+      const result = await client.get<unknown[]>("/app", { id });
+      const app = Array.isArray(result) ? result[0] : result;
+      if (!app) {
+        return { content: [{ type: "text", text: `App '${id}' not found.` }] };
+      }
+      return { content: [{ type: "text", text: JSON.stringify(app, null, 2) }] };
     }
   );
 
@@ -396,7 +402,10 @@ export function register(server: McpServer, client: TrueNASClient): void {
       id: z.string().describe("App ID (name) of the app to start"),
     },
     async ({ id }) => {
-      const result = await client.post(`/app/id/${id}/start`);
+      // `app.start` is a service method (not an item method), so it lives at
+      // /app/start and takes the app name as its single positional argument —
+      // which the REST layer reads as a bare JSON string body, not an object.
+      const result = await client.post("/app/start", id);
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );
@@ -408,7 +417,7 @@ export function register(server: McpServer, client: TrueNASClient): void {
       id: z.string().describe("App ID (name) of the app to stop"),
     },
     async ({ id }) => {
-      const result = await client.post(`/app/id/${id}/stop`);
+      const result = await client.post("/app/stop", id);
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );
@@ -420,7 +429,7 @@ export function register(server: McpServer, client: TrueNASClient): void {
       id: z.string().describe("App ID (name) of the app to redeploy"),
     },
     async ({ id }) => {
-      const result = await client.post(`/app/id/${id}/redeploy`);
+      const result = await client.post("/app/redeploy", id);
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );
@@ -431,11 +440,20 @@ export function register(server: McpServer, client: TrueNASClient): void {
     {
       id: z.string().describe("App ID (name) of the app to upgrade"),
       app_version: z.string().optional().describe("Target version to upgrade to (latest if omitted)"),
+      snapshot_hostpaths: z
+        .boolean()
+        .optional()
+        .describe("Snapshot host path volumes before upgrading (default false)"),
     },
-    async ({ id, app_version }) => {
-      const body: Record<string, unknown> = {};
-      if (app_version !== undefined) body.app_version = app_version;
-      const result = await client.post(`/app/id/${id}/upgrade`, body);
+    async ({ id, app_version, snapshot_hostpaths }) => {
+      // `app.upgrade` takes (app_name, options) — two positional arguments, so the
+      // REST layer expects an object keyed by argument name.
+      const options: Record<string, unknown> = {};
+      if (app_version !== undefined) options.app_version = app_version;
+      if (snapshot_hostpaths !== undefined) options.snapshot_hostpaths = snapshot_hostpaths;
+      const body: Record<string, unknown> = { app_name: id };
+      if (Object.keys(options).length > 0) body.options = options;
+      const result = await client.post("/app/upgrade", body);
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );
@@ -446,15 +464,22 @@ export function register(server: McpServer, client: TrueNASClient): void {
     {
       id: z.string().describe("App ID (name) of the app to rollback"),
       app_version: z.string().describe("Version to rollback to"),
+      rollback_snapshot: z
+        .boolean()
+        .optional()
+        .describe("Roll back the app's ix_volumes snapshot as well (default true)"),
       confirm: z.boolean().describe("Must be true to confirm rollback"),
     },
-    async ({ id, app_version, confirm }) => {
+    async ({ id, app_version, rollback_snapshot, confirm }) => {
       if (!confirm) {
         return {
           content: [{ type: "text", text: "App rollback aborted: 'confirm' must be set to true." }],
         };
       }
-      const result = await client.post(`/app/id/${id}/rollback`, { app_version });
+      // `app.rollback` takes (app_name, options) — see app_upgrade above.
+      const options: Record<string, unknown> = { app_version };
+      if (rollback_snapshot !== undefined) options.rollback_snapshot = rollback_snapshot;
+      const result = await client.post("/app/rollback", { app_name: id, options });
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );
@@ -481,10 +506,13 @@ export function register(server: McpServer, client: TrueNASClient): void {
 
   server.tool(
     "app_outdated_images",
-    "List outdated Docker images used by installed apps.",
-    {},
-    async () => {
-      const result = await client.get("/app/outdated_docker_images");
+    "List the outdated Docker images used by a specific installed app.",
+    {
+      app_name: z.string().describe("Name of the app to check for outdated images"),
+    },
+    async ({ app_name }) => {
+      // Single positional argument — sent as a bare JSON string body.
+      const result = await client.post("/app/outdated_docker_images", app_name);
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
   );
