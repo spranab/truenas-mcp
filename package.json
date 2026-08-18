@@ -1,7 +1,7 @@
 {
   "name": "truenas-mcp",
   "version": "1.0.1",
-  "description": "Comprehensive MCP server for TrueNAS SCALE — manage storage, shares, VMs, apps, network, and more via the Model Context Protocol",
+  "description": "Manage TrueNAS SCALE from an AI agent — 278 actions across 18 categories behind one hierarchical MCP tool (~200 tokens of context instead of ~28k). Destructive operations require explicit confirmation.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -17,9 +17,12 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "truenas",
     "mcp",
+    "mcp-server",
     "model-context-protocol",
+    "truenas",
+    "truenas-scale",
+    "freenas",
     "nas",
     "storage",
     "zfs",
@@ -27,8 +30,10 @@
     "nfs",
     "iscsi",
     "homelab",
-    "freenas",
-    "truenas-scale"
+    "self-hosted",
+    "ai-agents",
+    "claude",
+    "claude-code"
   ],
   "author": "spranab",
   "repository": {

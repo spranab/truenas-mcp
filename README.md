@@ -1,19 +1,61 @@
 # truenas-mcp
 
-The most comprehensive MCP server for TrueNAS SCALE. **278 actions across 18 categories** covering the entire TrueNAS REST API — behind a **single hierarchical tool** that won't bloat your LLM's context window.
+[![npm](https://img.shields.io/npm/v/truenas-mcp)](https://www.npmjs.com/package/truenas-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/truenas-mcp)](https://www.npmjs.com/package/truenas-mcp)
 
-## Why This One?
+Wiring a NAS into an AI assistant usually means registering one MCP tool per
+operation. Cover TrueNAS SCALE properly and that is 50-80 tool schemas — around
+28,000 tokens of your context window spent before the model has read a single
+word of your question, on every request, whether or not you touch storage.
 
-| | truenas-mcp | Others |
+truenas-mcp covers **278 actions across 18 categories** — the whole TrueNAS
+SCALE REST API — behind **one hierarchical tool** that costs about 200 tokens.
+The model asks what categories exist, drills into the one it needs, then calls
+the action. Destructive operations refuse to run without `confirm: true`.
+
+## Install (60 seconds)
+
+```bash
+# No install needed
+TRUENAS_URL=https://truenas.local TRUENAS_API_KEY=1-abc123 npx truenas-mcp
+```
+
+Claude Code:
+
+```bash
+claude mcp add truenas -- npx -y truenas-mcp   --env TRUENAS_URL=https://truenas.local   --env TRUENAS_API_KEY=1-your-api-key-here
+```
+
+Get the API key from the TrueNAS UI: **Settings > API Keys > Add**.
+
+## What it looks like
+
+**You:** "Are my pools healthy, and can you make an NFS share for the media
+dataset?"
+
+```
+→ truenas({ category: "storage", action: "pool_list" })
+  tank — ONLINE, 68% used, 0 errors
+
+→ truenas({ category: "sharing", action: "nfs_share_create",
+            params: { path: "/mnt/tank/media", comment: "Media share" } })
+```
+
+The model discovered `nfs_share_create` by calling `truenas({ category:
+"sharing" })` first — it never had those 36 sharing actions in its prompt.
+
+## Why one tool instead of 278
+
+| | truenas-mcp | Typical NAS MCP server |
 |---|---|---|
-| **Actions** | 278 | 5–80 |
-| **Token footprint** | ~200 tokens (1 tool) | 5,000–30,000 tokens (50–80 tools) |
+| **Actions** | 278 | 5-80 |
+| **Token footprint** | ~200 tokens (1 tool) | 5,000-30,000 tokens (50-80 tools) |
 | **Discovery** | Hierarchical — ask for what you need | Flat — everything loaded upfront |
 | **MCP Resources** | 12 read-only dashboards | 0 |
 | **Install** | `npx truenas-mcp` | Build from source / pip |
 | **Safety** | Destructive ops require `confirm: true` | Varies |
 
-## Quick Start
+## Full configuration
 
 ```bash
 # Using npx (no install needed)
@@ -174,6 +216,21 @@ npm install
 npm run build
 npm run dev  # watch mode
 ```
+
+## Related projects
+
+Other MCP servers and agent infrastructure built by the same author:
+
+- [mcpier](https://github.com/spranab/mcpier) — self-hosted MCP control plane
+  for your homelab; keeps API keys off your clients.
+- [saga-mcp](https://github.com/spranab/saga-mcp) — SQLite-backed project
+  tracker so the agent doesn't lose the plan between sessions.
+- [yantrikdb-mcp](https://github.com/yantrikos/yantrikdb-mcp) — persistent
+  cognitive memory for Claude Code, Cursor and Windsurf.
+- [swarmcode](https://github.com/spranab/swarmcode) — real-time channel
+  between Claude Code instances on different machines.
+- [brainstorm-mcp](https://github.com/spranab/brainstorm-mcp) — multi-model
+  debate as an MCP tool.
 
 ## License
 
