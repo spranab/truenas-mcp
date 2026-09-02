@@ -2,6 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/truenas-mcp)](https://www.npmjs.com/package/truenas-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/truenas-mcp)](https://www.npmjs.com/package/truenas-mcp)
+[![license](https://img.shields.io/npm/l/truenas-mcp)](https://github.com/spranab/truenas-mcp/blob/master/LICENSE)
 
 Wiring a NAS into an AI assistant usually means registering one MCP tool per
 operation. Cover TrueNAS SCALE properly and that is 50-80 tool schemas — around
